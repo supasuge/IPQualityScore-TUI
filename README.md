@@ -2,7 +2,8 @@
 
 A terminal UI for the [IPQualityScore](https://www.ipqualityscore.com) API, built with [Textual](https://textual.textualize.io).
 
-Browse, configure, and run every public IPQS endpoint from a three-pane TUI: pick an operation on the left, fill the dynamically generated form in the middle, see the JSON result on the right.
+Browse, configure, and run every public IPQS endpoint from a three-pane TUI: 
+- pick an operation on the left, fill the dynamically generated form in the middle, see the JSON result on the right.
 
 <p align="center">
   <img src="docs/screenshot.png" alt="ipqs-tui screenshot" width="1200" />
