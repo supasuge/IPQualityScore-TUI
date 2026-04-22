@@ -1,14 +1,27 @@
-# IPQualityScore Terminal User Interface
-
-- Includes importable Python SDK that is very simply a wrapper for the entire API using Python's `requests` library.
+# IPQS TUI
 
 A terminal UI for the [IPQualityScore](https://www.ipqualityscore.com) API, built with [Textual](https://textual.textualize.io).
 
 Browse, configure, and run every public IPQS endpoint from a three-pane TUI: pick an operation on the left, fill the dynamically generated form in the middle, see the JSON result on the right.
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="ipqs-tui screenshot" width="800" />
+  <img src="docs/screenshot.png" alt="ipqs-tui screenshot" width="1200" />
 </p>
+
+
+- The intended use/goal of this project was to create a simple and minimal terminal user-interface using the `textual` library to utilize an API wrapper client for all of [IPQualityScore's](https://www.ipqualityscore.com/) awesome API functionalities.
+- This includes but is not limited to:
+  - Fraud prevention
+  - Proxy detection
+  - Tor detection
+  - Email validation
+  - Phone validation & Reputation API
+  - Device Fingerprint API
+  - Mobile Device Fingerprinting
+  - Malicious URL Scanner & Domain reputation
+- Includes importable Python SDK that is very simply a wrapper for the entire API using Python's `requests` library.
+
+> ***Documentation coming soon***
 
 ---
 
@@ -33,7 +46,7 @@ Browse, configure, and run every public IPQS endpoint from a three-pane TUI: pic
 ## Quick start
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/supasuge/IPQualityScore-TUI.git ipqs_tui
 cd ipqs_tui
 uv sync
 export IPQS_API_KEY="your_key_here"   # or put it in a .env file
@@ -44,7 +57,7 @@ python -m ipqs_tui.app
 uv tool install . && ipqs-tui
 ```
 
-Or install as a CLI tool:
+Or install as a CLI tool that's globall accessible:
 
 ```bash
 uv tool install .
@@ -88,7 +101,7 @@ Mouse: click an operation in the left pane, click `Run` / `Clear` / `Save JSON`.
 
 | Category                  | Operations                                                                                                                                                                            |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Realtime Lookups**      | IP / Proxy Lookup · Email Verification · Phone Validation · Malicious URL / Domain Lookup · Device Fingerprint Lookup · Dark Web Leak (password / email+password) · Malware File Scan |
+| **Realtime Lookups**      | **IP / Proxy Lookup** · Email/Phone Verification uand Validation · Malicious URL / Domain Lookup · Device Fingerprint Lookup · Dark Web Leak (password / email+password) · Malware File Scan |
 | **History / Reporting**   | Postback / Retrieve Request · Request List · Fraud Reporting · Proxy Stats & Averages · Device Tracker Stats & Averages                                                               |
 | **Account / Meta**        | Credit Usage · Login History · Country List                                                                                                                                           |
 | **Bulk CSV**              | Upload · Status · List · Download Result URL                                                                                                                                          |
@@ -150,6 +163,8 @@ The suite covers:
 
 ## Development
 
+In order to sync development dependencies, then run the full integration test suite:
+
 ```bash
 uv sync --dev                       # install dev dependencies
 uv run pytest                       # full unit suite
@@ -165,6 +180,8 @@ To add a new operation:
 
 ---
 
-## License
+### Contributing
 
-MIT
+... *Instructions coming soon*
+
+
