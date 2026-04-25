@@ -42,6 +42,22 @@ Browse, configure, and run every public IPQS endpoint from a three-pane TUI:
 - [`uv`](https://docs.astral.sh/uv/) (package manager)
 - An [IPQS API key](https://www.ipqualityscore.com/create-account)
 
+## Installing `uv`
+
+**Linux**
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+***Windows**
+
+```bash
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Thne create an account with IPQS, select your plan and good to go.
+
 ---
 
 ## Quick start
@@ -56,9 +72,12 @@ source .venv/bin/acvtivate
 python -m ipqs_tui.app 
 # or as specified below to install and use
 uv tool install . && ipqs-tui
+# (if ur a try hard like me)
+git clone https://github.com/supasuge/IPQualityScore-TUI.git ipqs_tui && cd ipqs_tui && uv sync && source .venv/bin/activate && uv tool install .
+# optional -e on the `uv tool install .` so the project is still editable
 ```
 
-Or install as a CLI tool that's globall accessible:
+install as a CLI tool that's globall accessible as a sane fellow:
 
 ```bash
 uv tool install .
