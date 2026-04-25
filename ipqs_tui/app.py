@@ -6,17 +6,108 @@ from datetime import datetime
 from typing import Any
 
 from rich.markup import escape
-from textual import on, work
+from textual import events, on, work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.reactive import reactive
-from textual.widgets import Button, Footer, Header, Input, Label, OptionList, Pretty, Static
+from textual.widgets import Button, Footer, Header, Input, Label, OptionList, Static
 from textual.widgets.option_list import Option
 
 from .client import IPQSClient, IPQSError
 from .operations import FieldDef, OPERATIONS, OPERATIONS_BY_KEY, Operation
 
 _ID_REPLACE = re.compile(r"[^A-Za-z0-9_-]")
+
+
+_INITIAL_RESULT_TEXT = "[dim italic]waiting for first request…[/]"
+
+
+def _format_scalar(value: Any) -> str:
+    if value is None:
+        return "[dim]none[/]"
+    if isinstance(value, bool):
+        return f"[bold {'green' if value else 'red'}]{value}[/]"
+    if isinstance(value, (int, float)):
+        return f"[yellow]{value}[/]"
+    text = str(value)
+    if not text:
+        return "[dim](empty)[/]"
+    return escape(text)
+
+
+def format_result(value: Any, indent: int = 0) -> str:
+    """Render a JSON-ish payload as indented key/value lines (no brackets)."""
+    pad = "  " * indent
+    if isinstance(value, dict):
+        if not value:
+            return f"{pad}[dim](empty)[/]"
+        lines: list[str] = []
+        for key, sub in value.items():
+            label = f"[bold cyan]{escape(str(key))}[/]"
+            if isinstance(sub, dict) and sub:
+                lines.append(f"{pad}{label}")
+                lines.append(format_result(sub, indent + 1))
+            elif isinstance(sub, list) and sub:
+                lines.append(f"{pad}{label}")
+                lines.append(format_result(sub, indent + 1))
+            else:
+                lines.append(f"{pad}{label}  {_format_scalar(sub)}")
+        return "\n".join(lines)
+    if isinstance(value, list):
+        if not value:
+            return f"{pad}[dim](empty)[/]"
+        lines = []
+        for idx, item in enumerate(value):
+            bullet = f"[dim]{idx}.[/]"
+            if isinstance(item, (dict, list)) and item:
+                lines.append(f"{pad}{bullet}")
+                lines.append(format_result(item, indent + 1))
+            else:
+                lines.append(f"{pad}{bullet} {_format_scalar(item)}")
+        return "\n".join(lines)
+    return f"{pad}{_format_scalar(value)}"
+
+
+class Splitter(Static):
+    """Vertical drag handle that resizes the pane immediately to its left."""
+
+    DEFAULT_CSS = """
+    Splitter {
+        width: 1;
+        height: 1fr;
+        background: $panel;
+        color: $accent;
+        content-align: center middle;
+    }
+    Splitter:hover { background: $accent; color: $background; }
+    Splitter.-dragging { background: $accent; }
+    """
+
+    def __init__(self, target_id: str, *, min_width: int = 16, **kwargs: Any) -> None:
+        super().__init__("│", **kwargs)
+        self.target_id = target_id
+        self.min_width = min_width
+        self._dragging = False
+
+    def on_mouse_down(self, event: events.MouseDown) -> None:
+        self._dragging = True
+        self.add_class("-dragging")
+        self.capture_mouse()
+        event.stop()
+
+    def on_mouse_up(self, event: events.MouseUp) -> None:
+        if self._dragging:
+            self._dragging = False
+            self.remove_class("-dragging")
+            self.capture_mouse(False)
+        event.stop()
+
+    def on_mouse_move(self, event: events.MouseMove) -> None:
+        if not self._dragging:
+            return
+        target = self.app.query_one(f"#{self.target_id}")
+        new_width = max(self.min_width, target.size.width + event.delta_x)
+        target.styles.width = new_width
 
 
 def _field_id(field_name: str) -> str:
@@ -44,21 +135,28 @@ class IPQSTUI(App[None]):
 
     #ops-pane {
         width: 34;
+        min-width: 16;
         border: round $accent;
     }
 
     #form-pane {
         width: 48;
+        min-width: 16;
         border: round $primary;
     }
 
     #result-pane {
         width: 1fr;
+        min-width: 20;
         border: round $success;
     }
 
     #form-scroll, #result-scroll {
         height: 1fr;
+    }
+
+    #result {
+        padding: 0 1;
     }
 
     .section-title {
@@ -112,6 +210,7 @@ class IPQSTUI(App[None]):
             with Vertical(id="ops-pane"):
                 yield Static("Operations", classes="section-title")
                 yield OptionList(*self._build_operation_options(), id="operations")
+            yield Splitter(target_id="ops-pane")
             with Vertical(id="form-pane"):
                 yield Static("Parameters", classes="section-title")
                 yield Static(id="op-description")
@@ -122,10 +221,11 @@ class IPQSTUI(App[None]):
                     yield Button("Clear", variant="default", id="clear")
                     yield Button("Save JSON", variant="primary", id="save")
                 yield Static(id="status")
+            yield Splitter(target_id="form-pane")
             with Vertical(id="result-pane"):
                 yield Static("Result", classes="section-title")
                 with VerticalScroll(id="result-scroll"):
-                    yield Pretty({"status": "waiting for first request"}, id="result")
+                    yield Static(_INITIAL_RESULT_TEXT, id="result", markup=True)
         yield Footer()
 
     async def on_mount(self) -> None:
@@ -247,13 +347,13 @@ class IPQSTUI(App[None]):
 
     def _on_request_success(self, operation: Operation, result: Any) -> None:
         self.latest_result = result
-        self.query_one("#result", Pretty).update(result)
+        self.query_one("#result", Static).update(format_result(result))
         self._set_status(f"{operation.label} completed.")
 
     def _on_request_error(self, operation: Operation, exc: BaseException) -> None:
         error_payload = {"error": str(exc), "operation": operation.label}
         self.latest_result = error_payload
-        self.query_one("#result", Pretty).update(error_payload)
+        self.query_one("#result", Static).update(format_result(error_payload))
         self._set_status(str(exc), error=True)
 
     def _collect_kwargs(self, operation: Operation) -> dict[str, str]:
