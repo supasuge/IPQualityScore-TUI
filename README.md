@@ -58,6 +58,11 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 Thne create an account with IPQS, select your plan and good to go.
 
+### Changes 04/25/26
+
+- Changed JSON output from right pane to a prettified parser rather than just lazily dumping the whole JSON object...
+- All three panes of the TUI are are adjust similarly to two-three different tabs/windows that are adjustable when you hold your mouse in between them to adjust the size/scale between the two
+
 ---
 
 ## Quick start
